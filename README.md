@@ -32,13 +32,16 @@ Open http://localhost:3000
 
 ## Deploy Backend (Render)
 
-1. Push this repo to GitHub
-2. Go to [render.com](https://render.com) → New Web Service
-3. Connect your `fanzone-2026` repo
-4. Set **Root Directory** to `server`
-5. Build: `npm install` · Start: `npm start`
-6. Add env var `JWT_SECRET` (any random string)
-7. After deploy, update the API URL in `js/config.js` if your Render URL differs
+**Fastest way — use the Blueprint:**
+
+1. Log in at [render.com](https://render.com) (GitHub login works)
+2. Open: https://dashboard.render.com/blueprint/new?repo=https://github.com/jaaz10/fanzone-2026
+3. Click **Apply** — Render reads `render.yaml` and sets everything up
+4. Wait ~2–3 min for the deploy to finish
+5. Copy your service URL (should be `https://fanzone-2026-api.onrender.com`)
+6. Test: `https://fanzone-2026-api.onrender.com/api/health` should return `{"ok":true}`
+
+If your Render URL is different, update line 16 in `js/config.js` and push to GitHub.
 
 ## Deploy Frontend (GitHub Pages)
 
