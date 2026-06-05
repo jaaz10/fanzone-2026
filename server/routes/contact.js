@@ -1,5 +1,5 @@
 const express = require("express");
-const db = require("../db");
+const store = require("../store");
 
 const router = express.Router();
 
@@ -10,19 +10,16 @@ router.post("/", (req, res) => {
     return res.status(400).json({ ok: false, message: "Name, email, and message are required." });
   }
 
-  if (partyId) {
-    const party = db.prepare("SELECT id FROM viewing_parties WHERE id = ?").get(partyId);
-    if (!party) {
-      return res.status(404).json({ ok: false, message: "Event not found." });
-    }
+  if (partyId && !store.getPartyById(partyId)) {
+    return res.status(404).json({ ok: false, message: "Event not found." });
   }
 
-  db.prepare("INSERT INTO contact_messages (name, email, party_id, message) VALUES (?, ?, ?, ?)").run(
-    name.trim(),
-    email.trim().toLowerCase(),
-    partyId || null,
-    message.trim()
-  );
+  store.createContactMessage({
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    party_id: partyId || null,
+    message: message.trim(),
+  });
 
   res.status(201).json({ ok: true, message: "Message sent to organizers." });
 });

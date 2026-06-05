@@ -1,5 +1,3 @@
 .DS_Store
 node_modules/
-server/fanzone.db
-server/fanzone.db-shm
-server/fanzone.db-wal
+server/data/
