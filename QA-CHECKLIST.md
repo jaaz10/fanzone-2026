@@ -1,6 +1,6 @@
 # FanZone 2026 — QA Checklist
 
-Use this checklist before your final demo. Test on the **live site**:
+Checklist before your final demo. Test on the **live site**:
 
 - **Frontend:** https://jaaz10.github.io/fanzone-2026/
 - **Backend:** https://fanzone-2026-api.onrender.com/api/health
@@ -114,18 +114,6 @@ Use this checklist before your final demo. Test on the **live site**:
 - ☐ Have one registration already saved (for edit/cancel demo)
 - ☐ Use incognito as backup if something breaks
 - ☐ Know your demo flow: **Home → Filter → Sign up → Register → My Registrations → Contact**
-
----
-
-## Suggested demo script (2–3 min)
-
-1. **Homepage** — "Browse World Cup 2026 viewing parties"
-2. **Filter** — "Filter by Los Angeles"
-3. **Sign up** — quick account creation
-4. **Register** — register for an event
-5. **My Registrations** — show edit, then cancel (or keep one)
-6. **Contact** — send a message
-7. **Architecture** — "Frontend on GitHub Pages, backend API + database on Render"
 
 ---
 
