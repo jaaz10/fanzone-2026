@@ -1,46 +1,66 @@
-const AUTH_KEY = "fanzone_users";
-const SESSION_KEY = "fanzone_session";
-const REG_KEY = "fanzone_registrations";
+let currentUser = null;
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem(AUTH_KEY) || "[]");
-}
+async function initAuth() {
+  if (!getToken()) {
+    currentUser = null;
+    updateNav();
+    return null;
+  }
 
-function saveUsers(users) {
-  localStorage.setItem(AUTH_KEY, JSON.stringify(users));
+  try {
+    const data = await apiFetch("/auth/me");
+    currentUser = data.user;
+  } catch {
+    setToken(null);
+    currentUser = null;
+  }
+
+  updateNav();
+  return currentUser;
 }
 
 function getCurrentUser() {
-  const email = localStorage.getItem(SESSION_KEY);
-  if (!email) return null;
-  return getUsers().find((u) => u.email === email) || null;
+  return currentUser;
 }
 
-function signup(name, email, password) {
-  const users = getUsers();
-  if (users.some((u) => u.email === email)) {
-    return { ok: false, message: "An account with this email already exists." };
+async function signup(name, email, password) {
+  try {
+    const data = await apiFetch("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    });
+    setToken(data.token);
+    currentUser = data.user;
+    updateNav();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err.message };
   }
-  users.push({ name, email, password });
-  saveUsers(users);
-  localStorage.setItem(SESSION_KEY, email);
-  return { ok: true };
 }
 
-function login(email, password) {
-  const user = getUsers().find((u) => u.email === email && u.password === password);
-  if (!user) {
-    return { ok: false, message: "Invalid email or password." };
+async function login(email, password) {
+  try {
+    const data = await apiFetch("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    setToken(data.token);
+    currentUser = data.user;
+    updateNav();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err.message };
   }
-  localStorage.setItem(SESSION_KEY, email);
-  return { ok: true };
 }
 
 function logout() {
-  localStorage.removeItem(SESSION_KEY);
+  setToken(null);
+  currentUser = null;
+  updateNav();
 }
 
-function requireAuth(redirectTo) {
+async function requireAuth(redirectTo) {
+  await initAuth();
   if (!getCurrentUser()) {
     window.location.href = redirectTo || "login.html";
     return false;
@@ -48,53 +68,70 @@ function requireAuth(redirectTo) {
   return true;
 }
 
-function getRegistrations() {
-  return JSON.parse(localStorage.getItem(REG_KEY) || "[]");
+async function fetchParties(city) {
+  const query = city ? `?city=${encodeURIComponent(city)}` : "";
+  const data = await apiFetch(`/parties${query}`);
+  return data.parties;
 }
 
-function saveRegistrations(regs) {
-  localStorage.setItem(REG_KEY, JSON.stringify(regs));
+async function fetchCities() {
+  const data = await apiFetch("/parties/cities");
+  return data.cities;
 }
 
-function getUserRegistrations(email) {
-  return getRegistrations().filter((r) => r.userEmail === email);
+async function fetchPartyById(id) {
+  const data = await apiFetch(`/parties/${id}`);
+  return data.party;
 }
 
-function getPartyById(id) {
-  return VIEWING_PARTIES.find((p) => p.id === id);
+async function fetchRegistrations() {
+  const data = await apiFetch("/registrations");
+  return data.registrations;
 }
 
-function createRegistration(data) {
-  const regs = getRegistrations();
-  const existing = regs.find(
-    (r) => r.userEmail === data.userEmail && r.partyId === data.partyId
-  );
-  if (existing) {
-    return { ok: false, message: "You are already registered for this event." };
+async function createRegistration({ partyId, guests, phone, notes }) {
+  try {
+    await apiFetch("/registrations", {
+      method: "POST",
+      body: JSON.stringify({ partyId, guests, phone, notes }),
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err.message };
   }
-  const reg = {
-    id: "reg_" + Date.now(),
-    ...data,
-    createdAt: new Date().toISOString(),
-  };
-  regs.push(reg);
-  saveRegistrations(regs);
-  return { ok: true, registration: reg };
 }
 
-function updateRegistration(id, updates) {
-  const regs = getRegistrations();
-  const idx = regs.findIndex((r) => r.id === id);
-  if (idx === -1) return { ok: false, message: "Registration not found." };
-  regs[idx] = { ...regs[idx], ...updates };
-  saveRegistrations(regs);
-  return { ok: true };
+async function updateRegistration(id, updates) {
+  try {
+    await apiFetch(`/registrations/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
 }
 
-function cancelRegistration(id) {
-  const regs = getRegistrations().filter((r) => r.id !== id);
-  saveRegistrations(regs);
-  return { ok: true };
+async function cancelRegistration(id) {
+  try {
+    await apiFetch(`/registrations/${id}`, { method: "DELETE" });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+}
+
+async function sendContactMessage({ name, email, message, partyId }) {
+  try {
+    const data = await apiFetch("/contact", {
+      method: "POST",
+      body: JSON.stringify({ name, email, message, partyId: partyId || null }),
+    });
+    return { ok: true, message: data.message };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
 }
 
 function updateNav() {
@@ -107,6 +144,8 @@ function updateNav() {
   if (user && greeting) {
     greeting.textContent = `Hi, ${user.name}`;
     greeting.style.display = "inline";
+  } else if (greeting) {
+    greeting.style.display = "none";
   }
 
   const authLinks = nav.querySelectorAll("[data-auth]");

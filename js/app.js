@@ -33,7 +33,7 @@ function renderEventCard(party, options = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  updateNav();
+  initAuth();
 
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {

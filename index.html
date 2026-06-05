@@ -40,42 +40,60 @@
       <div id="no-events" class="empty-state" style="display:none">
         No viewing parties found for this city.
       </div>
+      <div id="load-error" class="empty-state" style="display:none">
+        Could not load events. Make sure the server is running.
+      </div>
     </section>
   </main>
 
   <footer>FanZone 2026 Demo · Sprint Board Project</footer>
 
-  <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>
     const cityFilter = document.getElementById("city-filter");
     const eventList = document.getElementById("event-list");
     const noEvents = document.getElementById("no-events");
+    const loadError = document.getElementById("load-error");
 
-    CITIES.forEach((city) => {
-      const opt = document.createElement("option");
-      opt.value = city;
-      opt.textContent = city;
-      cityFilter.appendChild(opt);
-    });
-
-    function renderEvents(city) {
-      const filtered = city
-        ? VIEWING_PARTIES.filter((p) => p.city === city)
-        : VIEWING_PARTIES;
-
-      if (filtered.length === 0) {
-        eventList.innerHTML = "";
-        noEvents.style.display = "block";
-        return;
+    async function loadCities() {
+      try {
+        const cities = await fetchCities();
+        cities.forEach((city) => {
+          const opt = document.createElement("option");
+          opt.value = city;
+          opt.textContent = city;
+          cityFilter.appendChild(opt);
+        });
+      } catch {
+        loadError.style.display = "block";
       }
+    }
 
-      noEvents.style.display = "none";
-      eventList.innerHTML = filtered.map((p) => renderEventCard(p)).join("");
+    async function renderEvents(city) {
+      try {
+        const parties = await fetchParties(city);
+
+        if (parties.length === 0) {
+          eventList.innerHTML = "";
+          noEvents.style.display = "block";
+          loadError.style.display = "none";
+          return;
+        }
+
+        noEvents.style.display = "none";
+        loadError.style.display = "none";
+        eventList.innerHTML = parties.map((p) => renderEventCard(p)).join("");
+      } catch {
+        eventList.innerHTML = "";
+        loadError.style.display = "block";
+      }
     }
 
     cityFilter.addEventListener("change", () => renderEvents(cityFilter.value));
+    loadCities();
     renderEvents("");
   </script>
 </body>

@@ -32,88 +32,108 @@
 
   <footer>FanZone 2026 Demo · Sprint Board Project</footer>
 
-  <script src="js/data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>
-    if (!requireAuth("login.html")) throw new Error("auth required");
+    (async () => {
+      if (!(await requireAuth("login.html"))) return;
 
-    const alertEl = document.getElementById("alert");
-    const regList = document.getElementById("reg-list");
-    const emptyEl = document.getElementById("empty");
+      const alertEl = document.getElementById("alert");
+      const regList = document.getElementById("reg-list");
+      const emptyEl = document.getElementById("empty");
+      let registrations = [];
 
-    function renderRegistrations() {
-      const user = getCurrentUser();
-      const regs = getUserRegistrations(user.email);
+      async function renderRegistrations() {
+        try {
+          registrations = await fetchRegistrations();
+        } catch (err) {
+          showAlert(alertEl, err.message, "error");
+          return;
+        }
 
-      if (regs.length === 0) {
-        regList.innerHTML = "";
-        emptyEl.style.display = "block";
-        return;
-      }
+        if (registrations.length === 0) {
+          regList.innerHTML = "";
+          emptyEl.style.display = "block";
+          return;
+        }
 
-      emptyEl.style.display = "none";
-      regList.innerHTML = regs
-        .map(
-          (r) => `
-        <div class="event-card" data-id="${r.id}">
-          <div>
-            <span class="badge">${r.city}</span>
-            <h3>${r.partyTitle}</h3>
-            <p class="event-meta">${formatDate(r.date)} · ${r.guests} guest(s)</p>
-            <p class="event-meta">Phone: ${r.phone}</p>
-            ${r.notes ? `<p class="event-meta">Notes: ${r.notes}</p>` : ""}
+        emptyEl.style.display = "none";
+        regList.innerHTML = registrations
+          .map(
+            (r) => `
+          <div class="event-card" data-id="${r.id}">
+            <div>
+              <span class="badge">${r.city}</span>
+              <h3>${r.party_title}</h3>
+              <p class="event-meta">${formatDate(r.date)} · ${r.guests} guest(s)</p>
+              <p class="event-meta">Phone: ${r.phone}</p>
+              ${r.notes ? `<p class="event-meta">Notes: ${r.notes}</p>` : ""}
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+              <button class="btn btn-accent btn-sm edit-btn" data-id="${r.id}">Edit</button>
+              <button class="btn btn-danger btn-sm cancel-btn" data-id="${r.id}">Cancel</button>
+            </div>
           </div>
-          <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
-            <button class="btn btn-accent btn-sm edit-btn" data-id="${r.id}">Edit</button>
-            <button class="btn btn-danger btn-sm cancel-btn" data-id="${r.id}">Cancel</button>
-          </div>
-        </div>
-      `
-        )
-        .join("");
+        `
+          )
+          .join("");
 
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", () => openEditModal(btn.dataset.id));
-      });
-
-      document.querySelectorAll(".cancel-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (confirm("Cancel this registration?")) {
-            cancelRegistration(btn.dataset.id);
-            showAlert(alertEl, "Registration cancelled.", "success");
-            renderRegistrations();
-          }
+        document.querySelectorAll(".edit-btn").forEach((btn) => {
+          btn.addEventListener("click", () => openEditModal(btn.dataset.id));
         });
-      });
-    }
 
-    function openEditModal(id) {
-      const regs = getRegistrations();
-      const reg = regs.find((r) => r.id === id);
-      if (!reg) return;
-
-      const guests = prompt("Number of guests (1-4):", reg.guests);
-      if (guests === null) return;
-
-      const num = parseInt(guests, 10);
-      if (isNaN(num) || num < 1 || num > 4) {
-        showAlert(alertEl, "Please enter a number between 1 and 4.", "error");
-        return;
+        document.querySelectorAll(".cancel-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (confirm("Cancel this registration?")) {
+              const result = await cancelRegistration(btn.dataset.id);
+              if (result.ok) {
+                showAlert(alertEl, "Registration cancelled.", "success");
+                renderRegistrations();
+              } else {
+                showAlert(alertEl, result.message, "error");
+              }
+            }
+          });
+        });
       }
 
-      const phone = prompt("Phone number:", reg.phone);
-      if (phone === null) return;
+      async function openEditModal(id) {
+        const reg = registrations.find((r) => String(r.id) === String(id));
+        if (!reg) return;
 
-      const notes = prompt("Special requests:", reg.notes || "");
-      if (notes === null) return;
+        const guests = prompt("Number of guests (1-4):", reg.guests);
+        if (guests === null) return;
 
-      updateRegistration(id, { guests: num, phone: phone.trim(), notes: notes.trim() });
-      showAlert(alertEl, "Registration updated.", "success");
+        const num = parseInt(guests, 10);
+        if (isNaN(num) || num < 1 || num > 4) {
+          showAlert(alertEl, "Please enter a number between 1 and 4.", "error");
+          return;
+        }
+
+        const phone = prompt("Phone number:", reg.phone);
+        if (phone === null) return;
+
+        const notes = prompt("Special requests:", reg.notes || "");
+        if (notes === null) return;
+
+        const result = await updateRegistration(id, {
+          guests: num,
+          phone: phone.trim(),
+          notes: notes.trim(),
+        });
+
+        if (result.ok) {
+          showAlert(alertEl, "Registration updated.", "success");
+          renderRegistrations();
+        } else {
+          showAlert(alertEl, result.message, "error");
+        }
+      }
+
       renderRegistrations();
-    }
-
-    renderRegistrations();
+    })();
   </script>
 </body>
 </html>
