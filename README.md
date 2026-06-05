@@ -21,27 +21,4 @@ python3 -m http.server 8000
 
 Then visit http://localhost:8000
 
-## Deploy to GitHub Pages
 
-1. Create a new repo on GitHub (e.g. `fanzone-2026`)
-2. Push this project:
-
-```bash
-git init
-git add .
-git commit -m "FanZone 2026 demo app"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/fanzone-2026.git
-git push -u origin main
-```
-
-3. On GitHub, go to **Settings → Pages**
-4. Under **Source**, select **Deploy from a branch**
-5. Choose branch `main` and folder `/ (root)`
-6. Click **Save**
-
-Your site will be live at `https://YOUR_USERNAME.github.io/fanzone-2026/`
-
-## Demo Notes
-
-This is a frontend-only demo. User accounts and registrations are saved in your browser's localStorage — no real backend or database.
