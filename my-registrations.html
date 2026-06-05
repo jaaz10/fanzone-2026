@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Registrations — FanZone 2026</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo">Fan<span>Zone</span> 2026</a>
+    <nav id="main-nav">
+      <span id="user-greeting" class="user-greeting" style="display:none"></span>
+      <a href="index.html">Events</a>
+      <a href="my-registrations.html" class="active" data-auth="in">My Registrations</a>
+      <a href="contact.html">Contact</a>
+      <a href="#" id="logout-btn" data-auth="in">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>My Registrations</h2>
+      <div id="alert"></div>
+      <div id="reg-list" class="event-list"></div>
+      <div id="empty" class="empty-state" style="display:none">
+        <p>You haven't registered for any events yet.</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:1rem">Browse Events</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>FanZone 2026 Demo · Sprint Board Project</footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if (!requireAuth("login.html")) throw new Error("auth required");
+
+    const alertEl = document.getElementById("alert");
+    const regList = document.getElementById("reg-list");
+    const emptyEl = document.getElementById("empty");
+
+    function renderRegistrations() {
+      const user = getCurrentUser();
+      const regs = getUserRegistrations(user.email);
+
+      if (regs.length === 0) {
+        regList.innerHTML = "";
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      emptyEl.style.display = "none";
+      regList.innerHTML = regs
+        .map(
+          (r) => `
+        <div class="event-card" data-id="${r.id}">
+          <div>
+            <span class="badge">${r.city}</span>
+            <h3>${r.partyTitle}</h3>
+            <p class="event-meta">${formatDate(r.date)} · ${r.guests} guest(s)</p>
+            <p class="event-meta">Phone: ${r.phone}</p>
+            ${r.notes ? `<p class="event-meta">Notes: ${r.notes}</p>` : ""}
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+            <button class="btn btn-accent btn-sm edit-btn" data-id="${r.id}">Edit</button>
+            <button class="btn btn-danger btn-sm cancel-btn" data-id="${r.id}">Cancel</button>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      document.querySelectorAll(".edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => openEditModal(btn.dataset.id));
+      });
+
+      document.querySelectorAll(".cancel-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (confirm("Cancel this registration?")) {
+            cancelRegistration(btn.dataset.id);
+            showAlert(alertEl, "Registration cancelled.", "success");
+            renderRegistrations();
+          }
+        });
+      });
+    }
+
+    function openEditModal(id) {
+      const regs = getRegistrations();
+      const reg = regs.find((r) => r.id === id);
+      if (!reg) return;
+
+      const guests = prompt("Number of guests (1-4):", reg.guests);
+      if (guests === null) return;
+
+      const num = parseInt(guests, 10);
+      if (isNaN(num) || num < 1 || num > 4) {
+        showAlert(alertEl, "Please enter a number between 1 and 4.", "error");
+        return;
+      }
+
+      const phone = prompt("Phone number:", reg.phone);
+      if (phone === null) return;
+
+      const notes = prompt("Special requests:", reg.notes || "");
+      if (notes === null) return;
+
+      updateRegistration(id, { guests: num, phone: phone.trim(), notes: notes.trim() });
+      showAlert(alertEl, "Registration updated.", "success");
+      renderRegistrations();
+    }
+
+    renderRegistrations();
+  </script>
+</body>
+</html>
