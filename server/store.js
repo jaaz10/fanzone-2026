@@ -5,12 +5,14 @@ const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const dbPath = path.join(dataDir, "fanzone.json");
 
 const SEED_PARTIES = [
-  { id: "vp1", title: "USA vs Mexico — Opening Match Watch Party", city: "Los Angeles", venue: "Downtown Sports Bar & Grill", date: "2026-06-11", time: "5:00 PM", spots: 80 },
-  { id: "vp2", title: "Brazil vs Argentina — Group Stage", city: "Miami", venue: "Bayfront Fan Zone", date: "2026-06-18", time: "7:30 PM", spots: 120 },
-  { id: "vp3", title: "Germany vs Spain — Knockout Round", city: "New York", venue: "Brooklyn Soccer Hall", date: "2026-07-02", time: "2:00 PM", spots: 60 },
-  { id: "vp4", title: "Canada vs France — Group Stage", city: "Toronto", venue: "Maple Leaf Pub", date: "2026-06-22", time: "12:00 PM", spots: 45 },
-  { id: "vp5", title: "World Cup Final Watch Party", city: "Los Angeles", venue: "Stadium Plaza", date: "2026-07-19", time: "1:00 PM", spots: 200 },
-  { id: "vp6", title: "England vs Italy — Quarter Final", city: "Chicago", venue: "Windy City Sports Lounge", date: "2026-07-08", time: "3:00 PM", spots: 75 },
+  { id: "vp1", title: "Mexico vs South Africa — Opening Match", city: "Chicago", venue: "Fútbol House Sports Bar", date: "2026-06-11", time: "2:00 PM", spots: 100 },
+  { id: "vp2", title: "USA vs Paraguay — Group D", city: "Los Angeles", venue: "SoFi Fan Zone", date: "2026-06-12", time: "6:00 PM", spots: 200 },
+  { id: "vp3", title: "Brazil vs Morocco — Group C", city: "Miami", venue: "Copacabana Sports Lounge", date: "2026-06-13", time: "6:00 PM", spots: 150 },
+  { id: "vp4", title: "England vs Croatia — Group L", city: "Dallas", venue: "Three Lions Pub", date: "2026-06-17", time: "3:00 PM", spots: 80 },
+  { id: "vp5", title: "Argentina vs Algeria — Group J", city: "New York", venue: "Buenos Aires Grill & Screen", date: "2026-06-16", time: "9:00 PM", spots: 120 },
+  { id: "vp6", title: "USA vs Australia — Group D", city: "Seattle", venue: "Emerald City Soccer Club", date: "2026-06-19", time: "12:00 PM", spots: 90 },
+  { id: "vp7", title: "France vs Senegal — Group I", city: "Toronto", venue: "Le Mondial Café", date: "2026-06-16", time: "3:00 PM", spots: 60 },
+  { id: "vp8", title: "World Cup Final Watch Party", city: "New York", venue: "MetLife Fan Festival", date: "2026-07-19", time: "3:00 PM", spots: 500 },
 ];
 
 function defaultData() {
